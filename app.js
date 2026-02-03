@@ -287,21 +287,85 @@ function restoreRecruitmentPage() {
 }
 
 // ============================================
+// Image Preloading
+// ============================================
+let imagesPreloaded = false;
+const preloadedImages = {}; // Cache of preloaded Image objects
+
+function getUniqueImagesFromTrials() {
+  const uniqueImages = new Set();
+  state.trialPairs.forEach(trial => {
+    uniqueImages.add(trial.imageA);
+    uniqueImages.add(trial.imageB);
+  });
+  return Array.from(uniqueImages);
+}
+
+async function preloadImages(imageList, onProgress) {
+  let loaded = 0;
+  const total = imageList.length;
+
+  const promises = imageList.map(imageName => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        loaded++;
+        preloadedImages[imageName] = img;
+        if (onProgress) onProgress(loaded, total);
+        resolve();
+      };
+      img.onerror = () => {
+        loaded++;
+        console.warn(`Failed to preload: ${imageName}`);
+        if (onProgress) onProgress(loaded, total);
+        resolve(); // Don't reject, continue with other images
+      };
+      img.src = `${CONFIG.IMAGE_FOLDER}/${imageName}`;
+    });
+  });
+
+  await Promise.all(promises);
+}
+
+// ============================================
 // Instructions Page
 // ============================================
 function initInstructionsPage() {
   const startBtn = document.getElementById('start-comparisons-btn');
   const backBtn = document.getElementById('instructions-back-btn');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const loadingText = document.getElementById('loading-text');
+  const loadingProgress = document.getElementById('loading-progress');
 
-  startBtn.addEventListener('click', () => {
+  startBtn.addEventListener('click', async () => {
     state.timestamps.instructionsComplete = new Date().toISOString();
 
-    // Only generate trial pairs if not already generated
+    // Generate trial pairs if not already generated
     if (state.trialPairs.length === 0) {
       state.trialPairs = generateTrialPairs();
     }
-    state.currentTrial = 0;
 
+    // Check if images need to be preloaded
+    if (!imagesPreloaded) {
+      // Show loading overlay
+      loadingOverlay.hidden = false;
+      startBtn.disabled = true;
+
+      // Get unique images needed for trials
+      const uniqueImages = getUniqueImagesFromTrials();
+      loadingProgress.textContent = `0 / ${uniqueImages.length}`;
+
+      // Preload images with progress updates
+      await preloadImages(uniqueImages, (loaded, total) => {
+        loadingProgress.textContent = `${loaded} / ${total}`;
+      });
+
+      imagesPreloaded = true;
+      loadingOverlay.hidden = true;
+      startBtn.disabled = false;
+    }
+
+    state.currentTrial = 0;
     saveProgress('instructions_complete');
     showPanel('comparison');
     loadComparison();
@@ -379,11 +443,22 @@ function loadComparison() {
   progressFill.style.width = `${progress}%`;
   progressText.textContent = `Comparison ${state.currentTrial + 1} of ${CONFIG.NUM_COMPARISONS}`;
 
-  // Load images
+  // Load images from preloaded cache (instant display)
   const imageLeft = document.getElementById('image-left');
   const imageRight = document.getElementById('image-right');
-  imageLeft.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageA}`;
-  imageRight.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageB}`;
+
+  // Use preloaded images if available, otherwise fall back to direct loading
+  if (preloadedImages[trial.imageA]) {
+    imageLeft.src = preloadedImages[trial.imageA].src;
+  } else {
+    imageLeft.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageA}`;
+  }
+
+  if (preloadedImages[trial.imageB]) {
+    imageRight.src = preloadedImages[trial.imageB].src;
+  } else {
+    imageRight.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageB}`;
+  }
 
   // Check if there's an existing response for this trial
   const existingComparison = state.comparisons.find(c => c.trialNumber === state.currentTrial + 1);
