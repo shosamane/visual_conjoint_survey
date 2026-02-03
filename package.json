@@ -1,0 +1,17 @@
+{
+  "name": "visual-conjoint-survey",
+  "version": "1.0.0",
+  "description": "Visual Conjoint Survey for Immigration Perception Study",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  },
+  "author": "Rutgers University Research Team",
+  "license": "ISC"
+}

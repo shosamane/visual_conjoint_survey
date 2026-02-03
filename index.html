@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Perception Study</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <!-- Page 1: Consent -->
+    <section class="panel" id="consent-panel">
+      <div class="logo-header">
+        <img src="logos/RNB_H_RED_RGB.png" alt="Rutgers University" class="university-logo" />
+      </div>
+
+      <h2 style="text-align: center; margin-bottom: 1rem;">Visual Perception Study</h2>
+      <p>This is an academic study conducted by researchers at Rutgers University.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Purpose:</strong></h4>
+      <p>In this study, we examine how people make quick decisions when encountering others who may need help.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Study Procedure:</strong></h4>
+      <p>If you agree to participate, you will complete a 10-15 minute online task:</p>
+      <ul>
+        <li>You will view pairs of images showing people who appear to be lost.</li>
+        <li>For each pair, you will indicate who you would be more likely to help.</li>
+        <li>Finally, you will answer some brief demographic questions.</li>
+      </ul>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Eligibility:</strong></h4>
+      <p>You must be at least 18 years old to participate.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Risks:</strong></h4>
+      <p>We expect minimal risk from your participation. You will only view images of people in everyday situations. If you feel uncomfortable at any time, you can withdraw.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Benefits:</strong></h4>
+      <p>No direct benefits. Your participation helps advance research on social perception and decision-making.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Compensation:</strong></h4>
+      <p>You will receive $X USD via Prolific/Clickworker if you complete the study.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Confidentiality:</strong></h4>
+      <p>Your identity and data are protected. We will only collect your Prolific/Clickworker ID to process compensation. All data will be stored securely and accessed by the research team only.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Voluntary Participation:</strong></h4>
+      <p>Participation is voluntary. You may withdraw anytime by closing your browser. We can only compensate those who complete the entire study.</p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Contact:</strong></h4>
+      <p>If you have questions about the study, please email: Sudhamshu Hosamane [sh1779@scarletmail.rutgers.edu]</p>
+      <p>If you have questions about your rights as a participant, please contact: <a href="mailto:IRBOffice@research.rutgers.edu">IRBOffice@research.rutgers.edu</a></p>
+
+      <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Consent:</strong></h4>
+      <p>I confirm that:</p>
+      <ul>
+        <li>I have read this form and understand the study</li>
+        <li>I am 18 years or older</li>
+        <li>I understand participation is voluntary and I can withdraw anytime</li>
+        <li>I understand my data will be kept confidential</li>
+      </ul>
+
+      <div class="consent-buttons">
+        <button id="consent-agree-btn" class="primary">I AGREE TO PARTICIPATE</button>
+        <button id="consent-decline-btn" class="primary outline" style="background: transparent; color: var(--error); border-color: var(--error);">I DO NOT WISH TO PARTICIPATE</button>
+      </div>
+    </section>
+
+    <!-- Page 2: Recruitment Info -->
+    <section class="panel" id="recruitment-panel" hidden>
+      <h2>Before We Begin</h2>
+
+      <div class="field" style="margin-bottom: 1.5rem;">
+        <span>From which platform were you recruited for this study?</span>
+        <div class="options" style="margin-top: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="recruitment-source" value="clickworker" />
+            <span>Clickworker</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="recruitment-source" value="prolific" />
+            <span>Prolific</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="radio" name="recruitment-source" value="referral" />
+            <span>I was referred by researchers</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="source-id-field" hidden style="margin-bottom: 1.5rem;">
+        <span id="source-id-label">Your Participant ID</span>
+        <input id="source-id" type="text" placeholder="Enter your ID" style="width: 100%; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: inherit; font: inherit;" />
+        <p class="tip" style="color: var(--error); margin-top: 0.5rem;">
+          <strong>Important:</strong> Please ensure you select the correct recruitment source and enter the correct ID.
+          Payment processing requires verification through the recruitment platform.
+          Incorrect information may result in payment delays or inability to process your compensation.
+        </p>
+      </div>
+
+      <button id="recruitment-continue-btn" class="primary" disabled>Continue to Study</button>
+    </section>
+
+    <!-- Page 3: Instructions -->
+    <section class="panel" id="instructions-panel" hidden>
+      <h2>Instructions</h2>
+
+      <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+        <p style="font-size: 1.1rem; line-height: 1.7; margin-bottom: 1rem;">
+          <strong>Imagine this scenario:</strong>
+        </p>
+        <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1rem;">
+          You are walking in an unfamiliar city and see two people who appear to be lost. You only have time to help <strong>one</strong> of them.
+        </p>
+        <p style="font-size: 1.05rem; line-height: 1.7;">
+          On the following pages, you will see pairs of images. For each pair, indicate who you would be <strong>more likely to help</strong> based on your first impression.
+        </p>
+      </div>
+
+      <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 1.5rem;">
+        <p style="margin: 0; color: #856404;">
+          <strong>Note:</strong> There are no right or wrong answers. We are interested in your honest first impressions. Please respond based on your gut feeling.
+        </p>
+      </div>
+
+      <p style="margin-bottom: 1.5rem;">You will complete <strong>10 comparisons</strong>. This should take about 5-8 minutes.</p>
+
+      <button id="start-comparisons-btn" class="primary">Begin Comparisons</button>
+    </section>
+
+    <!-- Pages 4-13: Comparisons -->
+    <section class="panel" id="comparison-panel" hidden>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="progress-text" id="progress-text">Comparison 1 of 10</p>
+
+      <p class="comparison-question">
+        If you had time to help only <strong>one</strong> of these two lost people, who would you be more likely to help?
+      </p>
+
+      <div class="image-comparison">
+        <div class="image-container">
+          <span class="image-label">Person A</span>
+          <img id="image-left" src="" alt="Person A" class="comparison-image" />
+        </div>
+        <div class="image-container">
+          <span class="image-label">Person B</span>
+          <img id="image-right" src="" alt="Person B" class="comparison-image" />
+        </div>
+      </div>
+
+      <div class="rating-scale">
+        <div class="scale-labels">
+          <span>More likely to help A</span>
+          <span>More likely to help B</span>
+        </div>
+        <div class="scale-options">
+          <label class="scale-option">
+            <input type="radio" name="comparison-response" value="definitely_A" />
+            <span class="scale-button">Definitely A</span>
+          </label>
+          <label class="scale-option">
+            <input type="radio" name="comparison-response" value="probably_A" />
+            <span class="scale-button">Probably A</span>
+          </label>
+          <label class="scale-option">
+            <input type="radio" name="comparison-response" value="equal" />
+            <span class="scale-button">Equal / Neither</span>
+          </label>
+          <label class="scale-option">
+            <input type="radio" name="comparison-response" value="probably_B" />
+            <span class="scale-button">Probably B</span>
+          </label>
+          <label class="scale-option">
+            <input type="radio" name="comparison-response" value="definitely_B" />
+            <span class="scale-button">Definitely B</span>
+          </label>
+        </div>
+      </div>
+
+      <button id="next-comparison-btn" class="primary" disabled>Next</button>
+    </section>
+
+    <!-- Page 14: Demographics -->
+    <section class="panel" id="demographics-panel" hidden>
+      <h2>About You</h2>
+      <p>Please answer these final questions about yourself.</p>
+
+      <label class="field">
+        <span>Age</span>
+        <input id="demo-age" type="number" min="18" max="120" placeholder="Enter your age" />
+      </label>
+
+      <label class="field">
+        <span>Gender</span>
+        <select id="demo-gender">
+          <option value="" selected disabled>Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-binary">Non-binary</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Education Level</span>
+        <select id="demo-education">
+          <option value="" selected disabled>Select your highest education</option>
+          <option value="Less than high school">Less than high school</option>
+          <option value="High school diploma">High school diploma or equivalent</option>
+          <option value="Some college">Some college, no degree</option>
+          <option value="Associate degree">Associate degree</option>
+          <option value="Bachelor's degree">Bachelor's degree</option>
+          <option value="Master's degree">Master's degree</option>
+          <option value="Doctoral degree">Doctoral or professional degree</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Country of Residence</span>
+        <input id="demo-country" type="text" placeholder="e.g., United States, India, Germany" />
+      </label>
+
+      <label class="field">
+        <span>Political Leaning (Optional)</span>
+        <select id="demo-political">
+          <option value="" selected disabled>Select</option>
+          <option value="Very liberal">Very liberal</option>
+          <option value="Somewhat liberal">Somewhat liberal</option>
+          <option value="Moderate">Moderate / Middle of the road</option>
+          <option value="Somewhat conservative">Somewhat conservative</option>
+          <option value="Very conservative">Very conservative</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </label>
+
+      <button id="submit-demographics-btn" class="primary">Submit</button>
+      <div id="demographics-error" class="error-message" hidden></div>
+    </section>
+
+    <!-- Page 15: Completion -->
+    <section class="panel" id="completion-panel" hidden>
+      <div class="logo-header">
+        <img src="logos/RNB_H_RED_RGB.png" alt="Rutgers University" class="university-logo" />
+      </div>
+
+      <div id="completion-content">
+        <h2 style="color: #1565C0; margin-bottom: 1.5rem; text-align: center;">Thank You!</h2>
+        <p style="text-align: center; font-size: 1.1rem; margin-bottom: 1.5rem;">
+          You have successfully completed the study.
+        </p>
+
+        <div id="completion-code-section" style="background: #e8f5e9; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+          <p style="margin-bottom: 0.5rem; font-weight: 600;">Your completion code:</p>
+          <p id="completion-code" style="font-size: 1.5rem; font-weight: 700; color: #2e7d32; font-family: monospace; margin: 0;">Loading...</p>
+        </div>
+
+        <p style="text-align: center; color: #666;">
+          Please copy this code and paste it into your recruitment platform (Prolific/Clickworker) to receive your compensation.
+        </p>
+      </div>
+
+      <div id="completion-error" hidden style="background: #fee; color: #c33; padding: 1.5rem; border-radius: 8px;">
+        <h3 style="margin-bottom: 1rem;">Error</h3>
+        <p id="completion-error-text"></p>
+        <p style="margin-top: 1rem;">
+          Please contact: <a href="mailto:sh1779@scarletmail.rutgers.edu" style="color: #1565C0;">sh1779@scarletmail.rutgers.edu</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Declined participation -->
+    <section class="panel" id="declined-panel" hidden>
+      <h2 style="text-align: center; color: #666;">Thank you for your time</h2>
+      <p style="text-align: center; margin-top: 1rem;">
+        You have chosen not to participate in this study. You may close this window.
+      </p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
