@@ -47,7 +47,7 @@ let state = {
     source: null,
     participantId: null
   },
-  comparisons: [],
+  comparisons: [], // Array of comparison responses indexed by trial number
   currentTrial: 0,
   attentionCheckPosition: null,
   attentionCheckPassed: null,
@@ -191,14 +191,17 @@ function initRecruitmentPage() {
   const sourceIdField = document.getElementById('source-id-field');
   const sourceIdInput = document.getElementById('source-id');
   const sourceIdLabel = document.getElementById('source-id-label');
+  const sourceIdWarning = document.getElementById('source-id-warning');
   const continueBtn = document.getElementById('recruitment-continue-btn');
+  const backBtn = document.getElementById('recruitment-back-btn');
 
   sourceRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
       state.recruitment.source = e.target.value;
 
-      // Show ID field
+      // Show ID field and warning only after radio selection
       sourceIdField.hidden = false;
+      sourceIdWarning.hidden = false;
 
       // Update label based on source
       if (e.target.value === 'clickworker') {
@@ -228,6 +231,11 @@ function initRecruitmentPage() {
       showPanel('instructions');
     }
   });
+
+  // Back button
+  backBtn.addEventListener('click', () => {
+    showPanel('consent');
+  });
 }
 
 function updateRecruitmentContinueButton() {
@@ -237,22 +245,72 @@ function updateRecruitmentContinueButton() {
   continueBtn.disabled = !(hasSource && hasId);
 }
 
+// Restore recruitment page state when navigating back
+function restoreRecruitmentPage() {
+  const sourceRadios = document.querySelectorAll('input[name="recruitment-source"]');
+  const sourceIdField = document.getElementById('source-id-field');
+  const sourceIdInput = document.getElementById('source-id');
+  const sourceIdLabel = document.getElementById('source-id-label');
+  const sourceIdWarning = document.getElementById('source-id-warning');
+
+  if (state.recruitment.source) {
+    // Check the correct radio
+    sourceRadios.forEach(radio => {
+      if (radio.value === state.recruitment.source) {
+        radio.checked = true;
+      }
+    });
+
+    // Show ID field and warning
+    sourceIdField.hidden = false;
+    sourceIdWarning.hidden = false;
+
+    // Set label
+    if (state.recruitment.source === 'clickworker') {
+      sourceIdLabel.textContent = 'Your Clickworker ID';
+      sourceIdInput.placeholder = 'Enter your Clickworker ID';
+    } else if (state.recruitment.source === 'prolific') {
+      sourceIdLabel.textContent = 'Your Prolific ID';
+      sourceIdInput.placeholder = 'Enter your Prolific ID';
+    } else {
+      sourceIdLabel.textContent = 'Your Name or Email';
+      sourceIdInput.placeholder = 'Enter your name or email';
+    }
+
+    // Restore ID
+    if (state.recruitment.participantId) {
+      sourceIdInput.value = state.recruitment.participantId;
+    }
+
+    updateRecruitmentContinueButton();
+  }
+}
+
 // ============================================
 // Instructions Page
 // ============================================
 function initInstructionsPage() {
   const startBtn = document.getElementById('start-comparisons-btn');
+  const backBtn = document.getElementById('instructions-back-btn');
 
   startBtn.addEventListener('click', () => {
     state.timestamps.instructionsComplete = new Date().toISOString();
 
-    // Generate all trial pairs
-    state.trialPairs = generateTrialPairs();
+    // Only generate trial pairs if not already generated
+    if (state.trialPairs.length === 0) {
+      state.trialPairs = generateTrialPairs();
+    }
     state.currentTrial = 0;
 
     saveProgress('instructions_complete');
     showPanel('comparison');
     loadComparison();
+  });
+
+  // Back button
+  backBtn.addEventListener('click', () => {
+    restoreRecruitmentPage();
+    showPanel('recruitment');
   });
 }
 
@@ -262,6 +320,7 @@ function initInstructionsPage() {
 function initComparisonPage() {
   const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
   const nextBtn = document.getElementById('next-comparison-btn');
+  const backBtn = document.getElementById('comparison-back-btn');
 
   responseRadios.forEach(radio => {
     radio.addEventListener('change', () => {
@@ -284,8 +343,27 @@ function initComparisonPage() {
 
       saveProgress('comparisons_complete');
       showPanel('demographics');
+      restoreDemographicsPage();
     } else {
       // Load next comparison
+      loadComparison();
+    }
+  });
+
+  // Back button
+  backBtn.addEventListener('click', () => {
+    // Save current response if any before going back
+    const selectedResponse = document.querySelector('input[name="comparison-response"]:checked');
+    if (selectedResponse) {
+      recordComparison();
+    }
+
+    if (state.currentTrial === 0) {
+      // Go back to instructions
+      showPanel('instructions');
+    } else {
+      // Go to previous trial
+      state.currentTrial--;
       loadComparison();
     }
   });
@@ -307,15 +385,26 @@ function loadComparison() {
   imageLeft.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageA}`;
   imageRight.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageB}`;
 
-  // Reset response
-  const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
-  responseRadios.forEach(radio => {
-    radio.checked = false;
-  });
+  // Check if there's an existing response for this trial
+  const existingComparison = state.comparisons.find(c => c.trialNumber === state.currentTrial + 1);
 
-  // Disable next button
+  // Reset/restore response
+  const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
   const nextBtn = document.getElementById('next-comparison-btn');
-  nextBtn.disabled = true;
+
+  if (existingComparison) {
+    // Restore previous response
+    responseRadios.forEach(radio => {
+      radio.checked = radio.value === existingComparison.response;
+    });
+    nextBtn.disabled = false;
+  } else {
+    // Clear response
+    responseRadios.forEach(radio => {
+      radio.checked = false;
+    });
+    nextBtn.disabled = true;
+  }
 
   // Update button text for last trial
   if (state.currentTrial === CONFIG.NUM_COMPARISONS - 1) {
@@ -349,7 +438,13 @@ function recordComparison() {
     responseTimestamp: new Date().toISOString()
   };
 
-  state.comparisons.push(comparison);
+  // Check if this trial already has a response (update instead of add)
+  const existingIndex = state.comparisons.findIndex(c => c.trialNumber === state.currentTrial + 1);
+  if (existingIndex !== -1) {
+    state.comparisons[existingIndex] = comparison;
+  } else {
+    state.comparisons.push(comparison);
+  }
 
   // Save after each comparison
   saveProgress('comparison_' + (state.currentTrial + 1));
@@ -360,6 +455,7 @@ function recordComparison() {
 // ============================================
 function initDemographicsPage() {
   const submitBtn = document.getElementById('submit-demographics-btn');
+  const backBtn = document.getElementById('demographics-back-btn');
   const errorDiv = document.getElementById('demographics-error');
 
   submitBtn.addEventListener('click', () => {
@@ -401,6 +497,44 @@ function initDemographicsPage() {
       loadCompletionCode();
     });
   });
+
+  // Back button - go to last comparison
+  backBtn.addEventListener('click', () => {
+    // Save current demographics state
+    saveDemographicsState();
+
+    state.currentTrial = CONFIG.NUM_COMPARISONS - 1;
+    showPanel('comparison');
+    loadComparison();
+  });
+}
+
+function saveDemographicsState() {
+  state.demographics = {
+    age: document.getElementById('demo-age').value ? parseInt(document.getElementById('demo-age').value) : null,
+    gender: document.getElementById('demo-gender').value || null,
+    education: document.getElementById('demo-education').value || null,
+    country: document.getElementById('demo-country').value?.trim() || null,
+    politicalLeaning: document.getElementById('demo-political').value || null
+  };
+}
+
+function restoreDemographicsPage() {
+  if (state.demographics.age) {
+    document.getElementById('demo-age').value = state.demographics.age;
+  }
+  if (state.demographics.gender) {
+    document.getElementById('demo-gender').value = state.demographics.gender;
+  }
+  if (state.demographics.education) {
+    document.getElementById('demo-education').value = state.demographics.education;
+  }
+  if (state.demographics.country) {
+    document.getElementById('demo-country').value = state.demographics.country;
+  }
+  if (state.demographics.politicalLeaning) {
+    document.getElementById('demo-political').value = state.demographics.politicalLeaning;
+  }
 }
 
 // ============================================
@@ -408,9 +542,6 @@ function initDemographicsPage() {
 // ============================================
 async function loadCompletionCode() {
   const codeElement = document.getElementById('completion-code');
-  const errorDiv = document.getElementById('completion-error');
-  const errorText = document.getElementById('completion-error-text');
-  const contentDiv = document.getElementById('completion-content');
 
   try {
     const response = await fetch(`${CONFIG.API_BASE}/get-code`, {

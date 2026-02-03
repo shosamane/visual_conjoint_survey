@@ -185,6 +185,56 @@ body {
   background: var(--accent-soft);
 }
 
+/* Recruitment Radio Options - Fixed Alignment */
+.recruitment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.radio-label:hover {
+  background: var(--accent-soft);
+}
+
+.radio-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
+.radio-text {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+/* Navigation Buttons */
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.nav-buttons .primary {
+  flex: 1;
+}
+
+.nav-buttons .primary.outline {
+  flex: 0 0 auto;
+  min-width: 100px;
+}
+
 /* Tip Text */
 .tip {
   font-size: 0.9rem;
@@ -333,12 +383,13 @@ body {
   box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
 }
 
-/* Next Button Container */
-#next-comparison-btn {
-  display: block;
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
+/* Comparison Nav Buttons */
+#comparison-panel .nav-buttons {
+  justify-content: center;
+}
+
+#comparison-panel .nav-buttons .primary {
+  max-width: 200px;
 }
 
 /* Completion Panel */
@@ -368,6 +419,14 @@ body {
 
   .consent-buttons button {
     width: 100%;
+  }
+
+  .nav-buttons {
+    flex-direction: column-reverse;
+  }
+
+  .nav-buttons .primary.outline {
+    min-width: auto;
   }
 
   .scale-options {

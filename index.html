@@ -71,33 +71,36 @@
 
       <div class="field" style="margin-bottom: 1.5rem;">
         <span>From which platform were you recruited for this study?</span>
-        <div class="options" style="margin-top: 0.5rem;">
-          <label style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="recruitment-options" style="margin-top: 0.75rem;">
+          <label class="radio-label">
             <input type="radio" name="recruitment-source" value="clickworker" />
-            <span>Clickworker</span>
+            <span class="radio-text">Clickworker</span>
           </label>
-          <label style="display: flex; align-items: center; gap: 0.5rem;">
+          <label class="radio-label">
             <input type="radio" name="recruitment-source" value="prolific" />
-            <span>Prolific</span>
+            <span class="radio-text">Prolific</span>
           </label>
-          <label style="display: flex; align-items: center; gap: 0.5rem;">
+          <label class="radio-label">
             <input type="radio" name="recruitment-source" value="referral" />
-            <span>I was referred by researchers</span>
+            <span class="radio-text">I was referred by researchers</span>
           </label>
         </div>
       </div>
 
       <div class="field" id="source-id-field" hidden style="margin-bottom: 1.5rem;">
         <span id="source-id-label">Your Participant ID</span>
-        <input id="source-id" type="text" placeholder="Enter your ID" style="width: 100%; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: inherit; font: inherit;" />
-        <p class="tip" style="color: var(--error); margin-top: 0.5rem;">
+        <input id="source-id" type="text" placeholder="Enter your ID" />
+        <p id="source-id-warning" class="tip" style="color: var(--error); margin-top: 0.5rem;" hidden>
           <strong>Important:</strong> Please ensure you select the correct recruitment source and enter the correct ID.
           Payment processing requires verification through the recruitment platform.
           Incorrect information may result in payment delays or inability to process your compensation.
         </p>
       </div>
 
-      <button id="recruitment-continue-btn" class="primary" disabled>Continue to Study</button>
+      <div class="nav-buttons">
+        <button id="recruitment-back-btn" class="primary outline">Back</button>
+        <button id="recruitment-continue-btn" class="primary" disabled>Continue to Study</button>
+      </div>
     </section>
 
     <!-- Page 3: Instructions -->
@@ -124,7 +127,10 @@
 
       <p style="margin-bottom: 1.5rem;">You will complete <strong>10 comparisons</strong>. This should take about 5-8 minutes.</p>
 
-      <button id="start-comparisons-btn" class="primary">Begin Comparisons</button>
+      <div class="nav-buttons">
+        <button id="instructions-back-btn" class="primary outline">Back</button>
+        <button id="start-comparisons-btn" class="primary">Begin Comparisons</button>
+      </div>
     </section>
 
     <!-- Pages 4-13: Comparisons -->
@@ -178,7 +184,10 @@
         </div>
       </div>
 
-      <button id="next-comparison-btn" class="primary" disabled>Next</button>
+      <div class="nav-buttons">
+        <button id="comparison-back-btn" class="primary outline">Back</button>
+        <button id="next-comparison-btn" class="primary" disabled>Next</button>
+      </div>
     </section>
 
     <!-- Page 14: Demographics -->
@@ -234,7 +243,10 @@
         </select>
       </label>
 
-      <button id="submit-demographics-btn" class="primary">Submit</button>
+      <div class="nav-buttons">
+        <button id="demographics-back-btn" class="primary outline">Back</button>
+        <button id="submit-demographics-btn" class="primary">Submit</button>
+      </div>
       <div id="demographics-error" class="error-message" hidden></div>
     </section>
 
