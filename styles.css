@@ -255,6 +255,24 @@ body {
   margin-top: 1rem;
 }
 
+/* Time Warning */
+.time-warning {
+  background: #fff5f5;
+  color: var(--error);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ffcdd2;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* Progress Bar */
 .progress-bar {
   width: 100%;

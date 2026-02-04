@@ -6,7 +6,8 @@
 const CONFIG = {
   NUM_COMPARISONS: 10,
   API_BASE: '/webhook3/api',
-  IMAGE_FOLDER: 'stimuli_images'
+  IMAGE_FOLDER: 'stimuli_images',
+  RESPONSE_TIME_WARNING: 10000 // 10 seconds in milliseconds
 };
 
 // Available images - update this list when adding new images
@@ -47,11 +48,11 @@ let state = {
     source: null,
     participantId: null
   },
-  comparisons: [], // Array of comparison responses indexed by trial number
+  comparisons: [],
   currentTrial: 0,
   attentionCheckPosition: null,
   attentionCheckPassed: null,
-  trialPairs: [], // Pre-generated pairs for all trials
+  trialPairs: [],
   demographics: {},
   timestamps: {
     sessionStart: new Date().toISOString(),
@@ -63,6 +64,10 @@ let state = {
   },
   progressStatus: 'started'
 };
+
+// Timer state
+let comparisonTimer = null;
+let comparisonStartTime = null;
 
 // ============================================
 // DOM Elements
@@ -97,67 +102,9 @@ function getOrCreateSessionId() {
 }
 
 // ============================================
-// Image Sampling
+// Browser History Navigation
 // ============================================
-
-// Uniform random sampling - each image has equal probability
-function sampleRandomImage() {
-  const index = Math.floor(Math.random() * AVAILABLE_IMAGES.length);
-  return AVAILABLE_IMAGES[index];
-}
-
-// Sample a pair of different images
-function sampleImagePair() {
-  const imageA = sampleRandomImage();
-  let imageB = sampleRandomImage();
-
-  // Ensure images are different
-  while (imageB === imageA) {
-    imageB = sampleRandomImage();
-  }
-
-  return { imageA, imageB };
-}
-
-// Generate all trial pairs including attention check at random position
-function generateTrialPairs() {
-  console.log('[generateTrialPairs] Starting, NUM_COMPARISONS:', CONFIG.NUM_COMPARISONS);
-  console.log('[generateTrialPairs] AVAILABLE_IMAGES count:', AVAILABLE_IMAGES.length);
-
-  const pairs = [];
-
-  // Generate attention check position (0-indexed, random among 10 trials)
-  state.attentionCheckPosition = Math.floor(Math.random() * CONFIG.NUM_COMPARISONS);
-  console.log('[generateTrialPairs] Attention check position:', state.attentionCheckPosition);
-
-  for (let i = 0; i < CONFIG.NUM_COMPARISONS; i++) {
-    if (i === state.attentionCheckPosition) {
-      // Attention check: same image on both sides
-      const sameImage = sampleRandomImage();
-      pairs.push({
-        imageA: sameImage,
-        imageB: sameImage,
-        isAttentionCheck: true
-      });
-    } else {
-      // Regular trial: different images
-      const { imageA, imageB } = sampleImagePair();
-      pairs.push({
-        imageA,
-        imageB,
-        isAttentionCheck: false
-      });
-    }
-  }
-
-  console.log('[generateTrialPairs] Generated pairs:', pairs.length);
-  return pairs;
-}
-
-// ============================================
-// Panel Navigation
-// ============================================
-function showPanel(panelId) {
+function navigateTo(panelId, addToHistory = true) {
   // Hide all panels
   Object.values(panels).forEach(panel => {
     if (panel) panel.hidden = true;
@@ -168,6 +115,78 @@ function showPanel(panelId) {
     panels[panelId].hidden = false;
     window.scrollTo(0, 0);
   }
+
+  // Add to browser history
+  if (addToHistory) {
+    const historyState = {
+      panel: panelId,
+      trial: state.currentTrial
+    };
+    history.pushState(historyState, '', `#${panelId}`);
+  }
+}
+
+function handlePopState(event) {
+  if (event.state && event.state.panel) {
+    const panelId = event.state.panel;
+
+    // Restore trial number if going back to comparison
+    if (panelId === 'comparison' && typeof event.state.trial === 'number') {
+      state.currentTrial = event.state.trial;
+      navigateTo('comparison', false);
+      loadComparison();
+    } else if (panelId === 'recruitment') {
+      restoreRecruitmentPage();
+      navigateTo('recruitment', false);
+    } else if (panelId === 'demographics') {
+      restoreDemographicsPage();
+      navigateTo('demographics', false);
+    } else {
+      navigateTo(panelId, false);
+    }
+  }
+}
+
+// ============================================
+// Image Sampling
+// ============================================
+function sampleRandomImage() {
+  const index = Math.floor(Math.random() * AVAILABLE_IMAGES.length);
+  return AVAILABLE_IMAGES[index];
+}
+
+function sampleImagePair() {
+  const imageA = sampleRandomImage();
+  let imageB = sampleRandomImage();
+  while (imageB === imageA) {
+    imageB = sampleRandomImage();
+  }
+  return { imageA, imageB };
+}
+
+function generateTrialPairs() {
+  const pairs = [];
+  state.attentionCheckPosition = Math.floor(Math.random() * CONFIG.NUM_COMPARISONS);
+
+  for (let i = 0; i < CONFIG.NUM_COMPARISONS; i++) {
+    if (i === state.attentionCheckPosition) {
+      const sameImage = sampleRandomImage();
+      pairs.push({
+        imageA: sameImage,
+        imageB: sameImage,
+        isAttentionCheck: true
+      });
+    } else {
+      const { imageA, imageB } = sampleImagePair();
+      pairs.push({
+        imageA,
+        imageB,
+        isAttentionCheck: false
+      });
+    }
+  }
+
+  return pairs;
 }
 
 // ============================================
@@ -180,11 +199,11 @@ function initConsentPage() {
   agreeBtn.addEventListener('click', () => {
     state.timestamps.consentComplete = new Date().toISOString();
     saveProgress('consent_complete');
-    showPanel('recruitment');
+    navigateTo('recruitment');
   });
 
   declineBtn.addEventListener('click', () => {
-    showPanel('declined');
+    navigateTo('declined');
   });
 }
 
@@ -198,23 +217,25 @@ function initRecruitmentPage() {
   const sourceIdLabel = document.getElementById('source-id-label');
   const sourceIdWarning = document.getElementById('source-id-warning');
   const continueBtn = document.getElementById('recruitment-continue-btn');
-  const backBtn = document.getElementById('recruitment-back-btn');
 
   sourceRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
       state.recruitment.source = e.target.value;
 
-      // Show ID field and warning only after radio selection
+      // Show ID field and warning
       sourceIdField.hidden = false;
       sourceIdWarning.hidden = false;
 
       // Update label based on source
-      if (e.target.value === 'clickworker') {
-        sourceIdLabel.textContent = 'Your Clickworker ID';
-        sourceIdInput.placeholder = 'Enter your Clickworker ID';
+      if (e.target.value === 'cloudresearch') {
+        sourceIdLabel.textContent = 'Your CloudResearch ID';
+        sourceIdInput.placeholder = 'Enter your CloudResearch ID';
       } else if (e.target.value === 'prolific') {
         sourceIdLabel.textContent = 'Your Prolific ID';
         sourceIdInput.placeholder = 'Enter your Prolific ID';
+      } else if (e.target.value === 'clickworker') {
+        sourceIdLabel.textContent = 'Your Clickworker ID';
+        sourceIdInput.placeholder = 'Enter your Clickworker ID';
       } else {
         sourceIdLabel.textContent = 'Your Name or Email';
         sourceIdInput.placeholder = 'Enter your name or email';
@@ -233,13 +254,8 @@ function initRecruitmentPage() {
     if (state.recruitment.source && state.recruitment.participantId) {
       state.timestamps.recruitmentComplete = new Date().toISOString();
       saveProgress('recruitment_complete');
-      showPanel('instructions');
+      navigateTo('instructions');
     }
-  });
-
-  // Back button
-  backBtn.addEventListener('click', () => {
-    showPanel('consent');
   });
 }
 
@@ -250,7 +266,6 @@ function updateRecruitmentContinueButton() {
   continueBtn.disabled = !(hasSource && hasId);
 }
 
-// Restore recruitment page state when navigating back
 function restoreRecruitmentPage() {
   const sourceRadios = document.querySelectorAll('input[name="recruitment-source"]');
   const sourceIdField = document.getElementById('source-id-field');
@@ -259,30 +274,27 @@ function restoreRecruitmentPage() {
   const sourceIdWarning = document.getElementById('source-id-warning');
 
   if (state.recruitment.source) {
-    // Check the correct radio
     sourceRadios.forEach(radio => {
-      if (radio.value === state.recruitment.source) {
-        radio.checked = true;
-      }
+      radio.checked = radio.value === state.recruitment.source;
     });
 
-    // Show ID field and warning
     sourceIdField.hidden = false;
     sourceIdWarning.hidden = false;
 
-    // Set label
-    if (state.recruitment.source === 'clickworker') {
-      sourceIdLabel.textContent = 'Your Clickworker ID';
-      sourceIdInput.placeholder = 'Enter your Clickworker ID';
+    if (state.recruitment.source === 'cloudresearch') {
+      sourceIdLabel.textContent = 'Your CloudResearch ID';
+      sourceIdInput.placeholder = 'Enter your CloudResearch ID';
     } else if (state.recruitment.source === 'prolific') {
       sourceIdLabel.textContent = 'Your Prolific ID';
       sourceIdInput.placeholder = 'Enter your Prolific ID';
+    } else if (state.recruitment.source === 'clickworker') {
+      sourceIdLabel.textContent = 'Your Clickworker ID';
+      sourceIdInput.placeholder = 'Enter your Clickworker ID';
     } else {
       sourceIdLabel.textContent = 'Your Name or Email';
       sourceIdInput.placeholder = 'Enter your name or email';
     }
 
-    // Restore ID
     if (state.recruitment.participantId) {
       sourceIdInput.value = state.recruitment.participantId;
     }
@@ -295,7 +307,7 @@ function restoreRecruitmentPage() {
 // Image Preloading
 // ============================================
 let imagesPreloaded = false;
-const preloadedImages = {}; // Cache of preloaded Image objects
+const preloadedImages = {};
 
 function getUniqueImagesFromTrials() {
   const uniqueImages = new Set();
@@ -307,10 +319,7 @@ function getUniqueImagesFromTrials() {
 }
 
 async function preloadImages(imageList, onProgress) {
-  if (!imageList || imageList.length === 0) {
-    console.warn('[Preload] No images to preload');
-    return;
-  }
+  if (!imageList || imageList.length === 0) return;
 
   let loaded = 0;
   const total = imageList.length;
@@ -321,15 +330,13 @@ async function preloadImages(imageList, onProgress) {
       img.onload = () => {
         loaded++;
         preloadedImages[imageName] = img;
-        console.log(`[Preload] Loaded ${loaded}/${total}: ${imageName}`);
         if (onProgress) onProgress(loaded, total);
         resolve();
       };
-      img.onerror = (err) => {
+      img.onerror = () => {
         loaded++;
-        console.error(`[Preload] Failed ${loaded}/${total}: ${imageName}`, err);
         if (onProgress) onProgress(loaded, total);
-        resolve(); // Don't reject, continue with other images
+        resolve();
       };
       img.src = `${CONFIG.IMAGE_FOLDER}/${imageName}`;
     });
@@ -343,41 +350,28 @@ async function preloadImages(imageList, onProgress) {
 // ============================================
 function initInstructionsPage() {
   const startBtn = document.getElementById('start-comparisons-btn');
-  const backBtn = document.getElementById('instructions-back-btn');
   const loadingOverlay = document.getElementById('loading-overlay');
-  const loadingText = document.getElementById('loading-text');
   const loadingProgress = document.getElementById('loading-progress');
 
   startBtn.addEventListener('click', async () => {
     try {
       state.timestamps.instructionsComplete = new Date().toISOString();
 
-      // Generate trial pairs if not already generated
       if (state.trialPairs.length === 0) {
         state.trialPairs = generateTrialPairs();
-        console.log('[Preload] Generated trial pairs:', state.trialPairs.length);
       }
 
-      // Check if images need to be preloaded
       if (!imagesPreloaded) {
-        // Show loading overlay
         loadingOverlay.classList.add('show');
         startBtn.disabled = true;
 
-        // Get unique images needed for trials
         const uniqueImages = getUniqueImagesFromTrials();
-        console.log('[Preload] Unique images to load:', uniqueImages.length);
 
         if (uniqueImages.length > 0) {
           loadingProgress.textContent = `0 / ${uniqueImages.length}`;
-
-          // Preload images with progress updates
           await preloadImages(uniqueImages, (loaded, total) => {
             loadingProgress.textContent = `${loaded} / ${total}`;
           });
-          console.log('[Preload] Complete');
-        } else {
-          console.warn('[Preload] No unique images found, skipping preload');
         }
 
         imagesPreloaded = true;
@@ -387,23 +381,16 @@ function initInstructionsPage() {
 
       state.currentTrial = 0;
       saveProgress('instructions_complete');
-      showPanel('comparison');
+      navigateTo('comparison');
       loadComparison();
     } catch (err) {
       console.error('[Instructions] Error:', err);
-      // Hide overlay and proceed anyway
       loadingOverlay.classList.remove('show');
       startBtn.disabled = false;
       state.currentTrial = 0;
-      showPanel('comparison');
+      navigateTo('comparison');
       loadComparison();
     }
-  });
-
-  // Back button
-  backBtn.addEventListener('click', () => {
-    restoreRecruitmentPage();
-    showPanel('recruitment');
   });
 }
 
@@ -413,53 +400,63 @@ function initInstructionsPage() {
 function initComparisonPage() {
   const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
   const nextBtn = document.getElementById('next-comparison-btn');
-  const backBtn = document.getElementById('comparison-back-btn');
 
   responseRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       nextBtn.disabled = false;
+      // Hide warning when user responds
+      const timeWarning = document.getElementById('time-warning');
+      if (timeWarning) timeWarning.hidden = true;
+      // Clear timer
+      if (comparisonTimer) {
+        clearTimeout(comparisonTimer);
+        comparisonTimer = null;
+      }
     });
   });
 
   nextBtn.addEventListener('click', () => {
     recordComparison();
 
+    // Clear any active timer
+    if (comparisonTimer) {
+      clearTimeout(comparisonTimer);
+      comparisonTimer = null;
+    }
+
     state.currentTrial++;
 
     if (state.currentTrial >= CONFIG.NUM_COMPARISONS) {
-      // All comparisons done
       state.timestamps.comparisonsComplete = new Date().toISOString();
-
-      // Check attention check
       const attentionTrial = state.comparisons.find(c => c.isAttentionCheck);
       state.attentionCheckPassed = attentionTrial ? attentionTrial.response === 'equal' : null;
-
       saveProgress('comparisons_complete');
-      showPanel('demographics');
+      navigateTo('demographics');
       restoreDemographicsPage();
     } else {
-      // Load next comparison
+      // Update history state for the new trial
+      const historyState = { panel: 'comparison', trial: state.currentTrial };
+      history.replaceState(historyState, '', '#comparison');
       loadComparison();
     }
   });
+}
 
-  // Back button
-  backBtn.addEventListener('click', () => {
-    // Save current response if any before going back
-    const selectedResponse = document.querySelector('input[name="comparison-response"]:checked');
-    if (selectedResponse) {
-      recordComparison();
-    }
+function startComparisonTimer() {
+  // Clear any existing timer
+  if (comparisonTimer) {
+    clearTimeout(comparisonTimer);
+  }
 
-    if (state.currentTrial === 0) {
-      // Go back to instructions
-      showPanel('instructions');
-    } else {
-      // Go to previous trial
-      state.currentTrial--;
-      loadComparison();
+  comparisonStartTime = Date.now();
+
+  // Set timer to show warning after 10 seconds
+  comparisonTimer = setTimeout(() => {
+    const timeWarning = document.getElementById('time-warning');
+    if (timeWarning) {
+      timeWarning.hidden = false;
     }
-  });
+  }, CONFIG.RESPONSE_TIME_WARNING);
 }
 
 function loadComparison() {
@@ -472,11 +469,10 @@ function loadComparison() {
   progressFill.style.width = `${progress}%`;
   progressText.textContent = `Comparison ${state.currentTrial + 1} of ${CONFIG.NUM_COMPARISONS}`;
 
-  // Load images from preloaded cache (instant display)
+  // Load images
   const imageLeft = document.getElementById('image-left');
   const imageRight = document.getElementById('image-right');
 
-  // Use preloaded images if available, otherwise fall back to direct loading
   if (preloadedImages[trial.imageA]) {
     imageLeft.src = preloadedImages[trial.imageA].src;
   } else {
@@ -489,28 +485,30 @@ function loadComparison() {
     imageRight.src = `${CONFIG.IMAGE_FOLDER}/${trial.imageB}`;
   }
 
-  // Check if there's an existing response for this trial
-  const existingComparison = state.comparisons.find(c => c.trialNumber === state.currentTrial + 1);
+  // Hide time warning
+  const timeWarning = document.getElementById('time-warning');
+  if (timeWarning) timeWarning.hidden = true;
 
-  // Reset/restore response
+  // Check for existing response
+  const existingComparison = state.comparisons.find(c => c.trialNumber === state.currentTrial + 1);
   const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
   const nextBtn = document.getElementById('next-comparison-btn');
 
   if (existingComparison) {
-    // Restore previous response
     responseRadios.forEach(radio => {
       radio.checked = radio.value === existingComparison.response;
     });
     nextBtn.disabled = false;
   } else {
-    // Clear response
     responseRadios.forEach(radio => {
       radio.checked = false;
     });
     nextBtn.disabled = true;
+    // Start timer for new comparisons
+    startComparisonTimer();
   }
 
-  // Update button text for last trial
+  // Update button text
   if (state.currentTrial === CONFIG.NUM_COMPARISONS - 1) {
     nextBtn.textContent = 'Continue to Demographics';
   } else {
@@ -532,6 +530,9 @@ function recordComparison() {
     'definitely_B': 2
   };
 
+  // Calculate response time
+  const responseTime = comparisonStartTime ? Date.now() - comparisonStartTime : null;
+
   const comparison = {
     trialNumber: state.currentTrial + 1,
     isAttentionCheck: trial.isAttentionCheck,
@@ -539,10 +540,10 @@ function recordComparison() {
     imageRight: trial.imageB,
     response: selectedResponse.value,
     responseValue: responseValue[selectedResponse.value],
-    responseTimestamp: new Date().toISOString()
+    responseTimestamp: new Date().toISOString(),
+    responseTimeMs: responseTime
   };
 
-  // Check if this trial already has a response (update instead of add)
   const existingIndex = state.comparisons.findIndex(c => c.trialNumber === state.currentTrial + 1);
   if (existingIndex !== -1) {
     state.comparisons[existingIndex] = comparison;
@@ -550,7 +551,6 @@ function recordComparison() {
     state.comparisons.push(comparison);
   }
 
-  // Save after each comparison
   saveProgress('comparison_' + (state.currentTrial + 1));
 }
 
@@ -559,7 +559,6 @@ function recordComparison() {
 // ============================================
 function initDemographicsPage() {
   const submitBtn = document.getElementById('submit-demographics-btn');
-  const backBtn = document.getElementById('demographics-back-btn');
   const errorDiv = document.getElementById('demographics-error');
 
   submitBtn.addEventListener('click', () => {
@@ -569,7 +568,6 @@ function initDemographicsPage() {
     const country = document.getElementById('demo-country').value;
     const political = document.getElementById('demo-political').value;
 
-    // Validate required fields
     if (!age || !gender || !education || !country) {
       errorDiv.textContent = 'Please fill in all required fields (Age, Gender, Education, Country).';
       errorDiv.hidden = false;
@@ -595,21 +593,10 @@ function initDemographicsPage() {
     state.timestamps.demographicsComplete = new Date().toISOString();
     state.progressStatus = 'completed';
 
-    // Final save and show completion
     saveProgress('demographics_complete').then(() => {
-      showPanel('completion');
+      navigateTo('completion');
       loadCompletionCode();
     });
-  });
-
-  // Back button - go to last comparison
-  backBtn.addEventListener('click', () => {
-    // Save current demographics state
-    saveDemographicsState();
-
-    state.currentTrial = CONFIG.NUM_COMPARISONS - 1;
-    showPanel('comparison');
-    loadComparison();
   });
 }
 
@@ -662,12 +649,10 @@ async function loadCompletionCode() {
     if (data.code) {
       codeElement.textContent = data.code;
     } else {
-      // Generate a fallback code if API fails
       codeElement.textContent = 'VCS-' + state.sessionId.substring(0, 8).toUpperCase();
     }
   } catch (err) {
     console.error('Error fetching completion code:', err);
-    // Use session-based fallback code
     codeElement.textContent = 'VCS-' + state.sessionId.substring(0, 8).toUpperCase();
   }
 }
@@ -707,7 +692,6 @@ async function saveProgress(status) {
     return response.json();
   } catch (err) {
     console.error('Error saving progress:', err);
-    // Don't block user progress on save failure
     return null;
   }
 }
@@ -716,7 +700,6 @@ async function saveProgress(status) {
 // Initialization
 // ============================================
 function init() {
-  // Initialize session
   state.sessionId = getOrCreateSessionId();
 
   // Initialize all pages
@@ -726,8 +709,14 @@ function init() {
   initComparisonPage();
   initDemographicsPage();
 
+  // Handle browser back/forward
+  window.addEventListener('popstate', handlePopState);
+
+  // Set initial history state
+  history.replaceState({ panel: 'consent' }, '', '#consent');
+
   // Show consent panel
-  showPanel('consent');
+  navigateTo('consent', false);
 
   console.log('[Visual Conjoint] Initialized with session:', state.sessionId);
 }

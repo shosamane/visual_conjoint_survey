@@ -20,7 +20,7 @@
       <p>In this study, we examine how people make quick decisions when encountering others who may need help.</p>
 
       <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Study Procedure:</strong></h4>
-      <p>If you agree to participate, you will complete a 10-15 minute online task:</p>
+      <p>If you agree to participate, you will complete a 3-4 minute online task:</p>
       <ul>
         <li>You will view pairs of images showing people who appear to be lost.</li>
         <li>For each pair, you will indicate who you would be more likely to help.</li>
@@ -28,7 +28,7 @@
       </ul>
 
       <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Eligibility:</strong></h4>
-      <p>You must be at least 18 years old to participate.</p>
+      <p>You must be at least 18 years old, reside in the United States, and understand English to participate.</p>
 
       <h4 style="margin-top: 1.5rem; margin-bottom: 0;"><strong>Risks:</strong></h4>
       <p>We expect minimal risk from your participation. You will only view images of people in everyday situations. If you feel uncomfortable at any time, you can withdraw.</p>
@@ -72,12 +72,16 @@
         <span>From which platform were you recruited for this study?</span>
         <div class="recruitment-options" style="margin-top: 0.75rem;">
           <label class="radio-label">
-            <input type="radio" name="recruitment-source" value="clickworker" />
-            <span class="radio-text">Clickworker</span>
+            <input type="radio" name="recruitment-source" value="cloudresearch" />
+            <span class="radio-text">CloudResearch</span>
           </label>
           <label class="radio-label">
             <input type="radio" name="recruitment-source" value="prolific" />
             <span class="radio-text">Prolific</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="recruitment-source" value="clickworker" />
+            <span class="radio-text">Clickworker</span>
           </label>
           <label class="radio-label">
             <input type="radio" name="recruitment-source" value="referral" />
@@ -96,10 +100,7 @@
         </p>
       </div>
 
-      <div class="nav-buttons">
-        <button id="recruitment-back-btn" class="primary outline">Back</button>
-        <button id="recruitment-continue-btn" class="primary" disabled>Continue to Study</button>
-      </div>
+      <button id="recruitment-continue-btn" class="primary" disabled>Continue to Study</button>
     </section>
 
     <!-- Page 3: Instructions -->
@@ -124,12 +125,15 @@
         </p>
       </div>
 
-      <p style="margin-bottom: 1.5rem;">You will complete <strong>10 comparisons</strong>. This should take about 5-8 minutes.</p>
-
-      <div class="nav-buttons">
-        <button id="instructions-back-btn" class="primary outline">Back</button>
-        <button id="start-comparisons-btn" class="primary">Begin Comparisons</button>
+      <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; border-left: 4px solid #1565C0; margin-bottom: 1.5rem;">
+        <p style="margin: 0; color: #0d47a1;">
+          <strong>Important:</strong> Please try to respond within 10 seconds for each comparison. Quick, instinctive responses help us understand genuine first impressions.
+        </p>
       </div>
+
+      <p style="margin-bottom: 1.5rem;">You will complete <strong>10 comparisons</strong>. This should take about 3-4 minutes.</p>
+
+      <button id="start-comparisons-btn" class="primary">Begin Comparisons</button>
 
       <!-- Loading overlay for image preloading -->
       <div id="loading-overlay">
@@ -192,10 +196,9 @@
         </div>
       </div>
 
-      <div class="nav-buttons">
-        <button id="comparison-back-btn" class="primary outline">Back</button>
-        <button id="next-comparison-btn" class="primary" disabled>Next</button>
-      </div>
+      <p id="time-warning" class="time-warning" hidden>Please try to respond more quickly based on your first impression.</p>
+
+      <button id="next-comparison-btn" class="primary" disabled>Next</button>
     </section>
 
     <!-- Page 14: Demographics -->
@@ -251,10 +254,7 @@
         </select>
       </label>
 
-      <div class="nav-buttons">
-        <button id="demographics-back-btn" class="primary outline">Back</button>
-        <button id="submit-demographics-btn" class="primary">Submit</button>
-      </div>
+      <button id="submit-demographics-btn" class="primary">Submit</button>
       <div id="demographics-error" class="error-message" hidden></div>
     </section>
 
