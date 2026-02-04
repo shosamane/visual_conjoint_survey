@@ -121,10 +121,14 @@ function sampleImagePair() {
 
 // Generate all trial pairs including attention check at random position
 function generateTrialPairs() {
+  console.log('[generateTrialPairs] Starting, NUM_COMPARISONS:', CONFIG.NUM_COMPARISONS);
+  console.log('[generateTrialPairs] AVAILABLE_IMAGES count:', AVAILABLE_IMAGES.length);
+
   const pairs = [];
 
   // Generate attention check position (0-indexed, random among 10 trials)
   state.attentionCheckPosition = Math.floor(Math.random() * CONFIG.NUM_COMPARISONS);
+  console.log('[generateTrialPairs] Attention check position:', state.attentionCheckPosition);
 
   for (let i = 0; i < CONFIG.NUM_COMPARISONS; i++) {
     if (i === state.attentionCheckPosition) {
@@ -146,6 +150,7 @@ function generateTrialPairs() {
     }
   }
 
+  console.log('[generateTrialPairs] Generated pairs:', pairs.length);
   return pairs;
 }
 
@@ -302,6 +307,11 @@ function getUniqueImagesFromTrials() {
 }
 
 async function preloadImages(imageList, onProgress) {
+  if (!imageList || imageList.length === 0) {
+    console.warn('[Preload] No images to preload');
+    return;
+  }
+
   let loaded = 0;
   const total = imageList.length;
 
@@ -311,12 +321,13 @@ async function preloadImages(imageList, onProgress) {
       img.onload = () => {
         loaded++;
         preloadedImages[imageName] = img;
+        console.log(`[Preload] Loaded ${loaded}/${total}: ${imageName}`);
         if (onProgress) onProgress(loaded, total);
         resolve();
       };
-      img.onerror = () => {
+      img.onerror = (err) => {
         loaded++;
-        console.warn(`Failed to preload: ${imageName}`);
+        console.error(`[Preload] Failed ${loaded}/${total}: ${imageName}`, err);
         if (onProgress) onProgress(loaded, total);
         resolve(); // Don't reject, continue with other images
       };
@@ -338,37 +349,55 @@ function initInstructionsPage() {
   const loadingProgress = document.getElementById('loading-progress');
 
   startBtn.addEventListener('click', async () => {
-    state.timestamps.instructionsComplete = new Date().toISOString();
+    try {
+      state.timestamps.instructionsComplete = new Date().toISOString();
 
-    // Generate trial pairs if not already generated
-    if (state.trialPairs.length === 0) {
-      state.trialPairs = generateTrialPairs();
-    }
+      // Generate trial pairs if not already generated
+      if (state.trialPairs.length === 0) {
+        state.trialPairs = generateTrialPairs();
+        console.log('[Preload] Generated trial pairs:', state.trialPairs.length);
+      }
 
-    // Check if images need to be preloaded
-    if (!imagesPreloaded) {
-      // Show loading overlay
-      loadingOverlay.hidden = false;
-      startBtn.disabled = true;
+      // Check if images need to be preloaded
+      if (!imagesPreloaded) {
+        // Show loading overlay
+        loadingOverlay.classList.add('show');
+        startBtn.disabled = true;
 
-      // Get unique images needed for trials
-      const uniqueImages = getUniqueImagesFromTrials();
-      loadingProgress.textContent = `0 / ${uniqueImages.length}`;
+        // Get unique images needed for trials
+        const uniqueImages = getUniqueImagesFromTrials();
+        console.log('[Preload] Unique images to load:', uniqueImages.length);
 
-      // Preload images with progress updates
-      await preloadImages(uniqueImages, (loaded, total) => {
-        loadingProgress.textContent = `${loaded} / ${total}`;
-      });
+        if (uniqueImages.length > 0) {
+          loadingProgress.textContent = `0 / ${uniqueImages.length}`;
 
-      imagesPreloaded = true;
-      loadingOverlay.hidden = true;
+          // Preload images with progress updates
+          await preloadImages(uniqueImages, (loaded, total) => {
+            loadingProgress.textContent = `${loaded} / ${total}`;
+          });
+          console.log('[Preload] Complete');
+        } else {
+          console.warn('[Preload] No unique images found, skipping preload');
+        }
+
+        imagesPreloaded = true;
+        loadingOverlay.classList.remove('show');
+        startBtn.disabled = false;
+      }
+
+      state.currentTrial = 0;
+      saveProgress('instructions_complete');
+      showPanel('comparison');
+      loadComparison();
+    } catch (err) {
+      console.error('[Instructions] Error:', err);
+      // Hide overlay and proceed anyway
+      loadingOverlay.classList.remove('show');
       startBtn.disabled = false;
+      state.currentTrial = 0;
+      showPanel('comparison');
+      loadComparison();
     }
-
-    state.currentTrial = 0;
-    saveProgress('instructions_complete');
-    showPanel('comparison');
-    loadComparison();
   });
 
   // Back button
