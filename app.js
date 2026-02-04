@@ -11,32 +11,28 @@ const CONFIG = {
 };
 
 // Available images - update this list when adding new images
+// Naming: google-gemini-2.5-flash-image-{Age}_{Gender}_{Ethnicity}_{Religion}_{Clothing}_{Appearance}.png
 const AVAILABLE_IMAGES = [
-  'Adult_F_PacIsl_TravelWorn_Disheveled.png',
-  'Adult_F_White_Formal_Disheveled.png',
-  'Adult_F_White_Formal_WellMaint.png',
-  'Adult_F_White_Traditional_Disheveled.png',
-  'Adult_F_White_Traditional_WellMaint.png',
-  'Adult_F_White_TravelWorn_Disheveled.png',
-  'Adult_F_White_TravelWorn_WellMaint.png',
-  'MiddleAged_F_White_Formal_Disheveled.png',
-  'MiddleAged_F_White_Formal_WellMaint.png',
-  'MiddleAged_F_White_Traditional_Disheveled.png',
-  'MiddleAged_F_White_Traditional_WellMaint.png',
-  'MiddleAged_F_White_TravelWorn_Disheveled.png',
-  'MiddleAged_F_White_TravelWorn_WellMaint.png',
-  'Older_F_White_Formal_Disheveled.png',
-  'Older_F_White_Formal_WellMaint.png',
-  'Older_F_White_Traditional_Disheveled.png',
-  'Older_F_White_Traditional_WellMaint.png',
-  'Older_F_White_TravelWorn_Disheveled.png',
-  'Older_F_White_TravelWorn_WellMaint.png',
-  'YoungAdult_F_White_Formal_Disheveled.png',
-  'YoungAdult_F_White_Formal_WellMaint.png',
-  'YoungAdult_F_White_Traditional_Disheveled.png',
-  'YoungAdult_F_White_Traditional_WellMaint.png',
-  'YoungAdult_F_White_TravelWorn_Disheveled.png',
-  'YoungAdult_F_White_TravelWorn_WellMaint.png'
+  'google-gemini-2.5-flash-image-Adult_F_SAsian_Muslim_Formal_WellMaint.png',
+  'google-gemini-2.5-flash-image-Adult_F_White_NonMuslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-Adult_M_White_NonMuslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-MiddleAged_M_Black_NonMuslim_Formal_WellMaint.png',
+  'google-gemini-2.5-flash-image-MiddleAged_M_MENA_Muslim_Formal_Disheveled.png',
+  'google-gemini-2.5-flash-image-MiddleAged_M_SAsian_Muslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-MiddleAged_M_White_Muslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-Older_F_NatAm_NonMuslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-Older_F_White_Muslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-Older_F_White_Muslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-Older_M_SAsian_NonMuslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-Older_M_White_Muslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-Older_M_White_NonMuslim_Casual_Disheveled.png',
+  'google-gemini-2.5-flash-image-Older_M_White_NonMuslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-YoungAdult_F_Latino_NonMuslim_Formal_Disheveled.png',
+  'google-gemini-2.5-flash-image-YoungAdult_F_SEAsian_Muslim_Formal_Disheveled.png',
+  'google-gemini-2.5-flash-image-YoungAdult_F_White_Muslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-YoungAdult_F_White_NonMuslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-YoungAdult_M_Black_Muslim_Casual_WellMaint.png',
+  'google-gemini-2.5-flash-image-YoungAdult_M_White_NonMuslim_Casual_Disheveled.png'
 ];
 
 // ============================================
