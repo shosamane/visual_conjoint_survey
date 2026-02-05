@@ -315,10 +315,157 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Desktop: keep original stacked layout */
 @media (max-width: 600px) {
   .image-comparison {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+}
+
+/* ============================================
+   Mobile Comparison Layout (Option B)
+   Images on left, vertical buttons on right
+   ============================================ */
+@media (max-width: 768px) {
+  /* Main comparison container - horizontal flex */
+  .mobile-comparison-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+  }
+
+  /* Left side: stacked images */
+  .mobile-comparison-layout .image-comparison {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-comparison-layout .image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .mobile-comparison-layout .image-label {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-comparison-layout .comparison-image {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: 35vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .mobile-comparison-layout .comparison-image:hover {
+    transform: none;
+  }
+
+  /* Right side: vertical buttons */
+  .mobile-comparison-layout .rating-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: auto;
+    min-width: 90px;
+  }
+
+  .mobile-comparison-layout .scale-labels {
+    display: none; /* Hide horizontal labels on mobile */
+  }
+
+  .mobile-comparison-layout .scale-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .mobile-comparison-layout .scale-option {
+    flex: none;
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+
+  .mobile-comparison-layout .scale-button {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  /* Time warning - positioned at top on mobile */
+  .mobile-comparison-layout + .time-warning,
+  #comparison-panel .time-warning.mobile-warning {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  /* Hide desktop layout elements when mobile layout is active */
+  #comparison-panel.mobile-active > .image-comparison,
+  #comparison-panel.mobile-active > .rating-scale {
+    display: none;
+  }
+
+  /* Comparison question - more compact */
+  #comparison-panel.mobile-active .comparison-question {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  /* Progress bar adjustments */
+  #comparison-panel.mobile-active .progress-text {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Next button */
+  #comparison-panel.mobile-active #next-comparison-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Extra small screens - tighter spacing */
+@media (max-width: 480px) {
+  .mobile-comparison-layout {
+    gap: 0.5rem;
+  }
+
+  .mobile-comparison-layout .comparison-image {
+    max-height: 30vh;
+    border-radius: 6px;
+  }
+
+  .mobile-comparison-layout .rating-scale {
+    min-width: 80px;
+  }
+
+  .mobile-comparison-layout .scale-button {
+    padding: 0.45rem 0.3rem;
+    font-size: 0.65rem;
+  }
+
+  .mobile-comparison-layout .image-label {
+    font-size: 0.8rem;
   }
 }
 

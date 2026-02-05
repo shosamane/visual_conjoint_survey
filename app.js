@@ -393,6 +393,72 @@ function initInstructionsPage() {
 // ============================================
 // Comparison Page
 // ============================================
+
+// Check if viewport is mobile width
+function isMobileViewport() {
+  return window.innerWidth <= 768;
+}
+
+// Setup mobile layout for comparison panel
+function setupMobileComparisonLayout() {
+  const comparisonPanel = document.getElementById('comparison-panel');
+  const imageComparison = comparisonPanel.querySelector('.image-comparison');
+  const ratingScale = comparisonPanel.querySelector('.rating-scale');
+  const timeWarning = document.getElementById('time-warning');
+
+  // Check if mobile layout already exists
+  let mobileWrapper = comparisonPanel.querySelector('.mobile-comparison-layout');
+
+  if (isMobileViewport()) {
+    // Create mobile layout if it doesn't exist
+    if (!mobileWrapper) {
+      mobileWrapper = document.createElement('div');
+      mobileWrapper.className = 'mobile-comparison-layout';
+
+      // Insert wrapper before the original elements
+      imageComparison.parentNode.insertBefore(mobileWrapper, imageComparison);
+
+      // Move elements into wrapper
+      mobileWrapper.appendChild(imageComparison);
+      mobileWrapper.appendChild(ratingScale);
+
+      // Move time warning after the mobile wrapper
+      if (timeWarning && timeWarning.parentNode) {
+        mobileWrapper.parentNode.insertBefore(timeWarning, mobileWrapper.nextSibling);
+      }
+    }
+    comparisonPanel.classList.add('mobile-active');
+  } else {
+    // Restore desktop layout
+    if (mobileWrapper) {
+      // Move elements back out of wrapper
+      mobileWrapper.parentNode.insertBefore(imageComparison, mobileWrapper);
+      mobileWrapper.parentNode.insertBefore(ratingScale, mobileWrapper);
+
+      // Move time warning back to after rating scale
+      if (timeWarning && timeWarning.parentNode) {
+        ratingScale.parentNode.insertBefore(timeWarning, ratingScale.nextSibling);
+      }
+
+      // Remove wrapper
+      mobileWrapper.remove();
+    }
+    comparisonPanel.classList.remove('mobile-active');
+  }
+}
+
+// Handle viewport resize
+let resizeTimeout = null;
+function handleViewportResize() {
+  if (resizeTimeout) clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    const comparisonPanel = document.getElementById('comparison-panel');
+    if (comparisonPanel && !comparisonPanel.hidden) {
+      setupMobileComparisonLayout();
+    }
+  }, 100);
+}
+
 function initComparisonPage() {
   const responseRadios = document.querySelectorAll('input[name="comparison-response"]');
   const nextBtn = document.getElementById('next-comparison-btn');
@@ -430,12 +496,15 @@ function initComparisonPage() {
       navigateTo('demographics');
       restoreDemographicsPage();
     } else {
-      // Update history state for the new trial
+      // Add new history entry for each trial so back button works
       const historyState = { panel: 'comparison', trial: state.currentTrial };
-      history.replaceState(historyState, '', '#comparison');
+      history.pushState(historyState, '', '#comparison');
       loadComparison();
     }
   });
+
+  // Listen for viewport resize
+  window.addEventListener('resize', handleViewportResize);
 }
 
 function startComparisonTimer() {
@@ -457,6 +526,9 @@ function startComparisonTimer() {
 
 function loadComparison() {
   const trial = state.trialPairs[state.currentTrial];
+
+  // Setup mobile layout if needed
+  setupMobileComparisonLayout();
 
   // Update progress
   const progressFill = document.getElementById('progress-fill');
